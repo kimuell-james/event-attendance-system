@@ -1,0 +1,52 @@
+{% extends 'attendance/main.html' %}
+
+{% block content %}
+
+<div>
+    {% if event %}
+    <h2>Event: {{ event.name }} ({{ event.date }})</h2>
+
+    {% if session %}
+    {% if session_status == "active" %}
+    <p>Session: {{ session.session_name }} (Active now: {{ session.start_time }} - {{ session.end_time }})</p>
+    {% elif session_status == "upcoming" %}
+    <p>Upcoming session: {{ session.name }} (Starts at {{ session.start_time }})</p>
+    {% endif %}
+    {% else %}
+    <p>No more sessions today.</p>
+    {% endif %}
+    {% else %}
+    <p>No events scheduled today.</p>
+    {% endif %}
+
+    <input type="text" id="rfidInput" placeholder="Scan RFID" autofocus>
+    <p id="message"></p>
+</div>
+
+<script>
+    // Listen for RFID input (Enter key press)
+    document.getElementById("rfidInput").addEventListener("keypress", function (e) {
+        if (e.key === "Enter") {
+            let rfid = this.value;
+            fetch("/mark_attendance/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify({ rfid: rfid })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    let msgBox = document.getElementById("message");
+                    msgBox.innerText = data.message;
+                    msgBox.style.color = data.success ? "green" : "red";
+                    this.value = ""; // clear input after scan
+                });
+        }
+    });
+</script>
+
+
+
+{% endblock %}

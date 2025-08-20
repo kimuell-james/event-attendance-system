@@ -26,9 +26,10 @@ class SessionAdmin(admin.ModelAdmin):
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
-    list_display = ("student", "session", "login_time", "logout_time")
+    list_display = ("student", "session", "log_time", "status")
     list_filter = ("session__event", "session__session_name")
     search_fields = ("student__first_name", "student__last_name", "student__rfid")
+
 
 
 @admin.register(Penalty)
