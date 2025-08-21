@@ -1,0 +1,84 @@
+/* Main Content */
+body.home-bg {
+    min-height: 100vh;
+    background: url("/static/images/abstract-art-bg.jpg") no-repeat center center fixed;
+    background-size: cover;
+    color: azure !important;
+}
+
+/* Style the whole navbar */
+.navbar {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+/* Make navbar links visible */
+.navbar a {
+    color: rgb(240, 255, 255) !important;
+    text-decoration: none;
+}
+
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    /* vertically center items */
+    gap: 10px;
+    /* spacing between items */
+}
+
+.navbar-title {
+    margin: 0;
+    /* remove default margin from h2 */
+    font-size: 1.5rem;
+    /* adjust size */
+    color: rgb(240, 255, 255);
+    /* keep text color */
+}
+
+.navbar-link {
+    margin-left: 10px;
+}
+
+.navbar-link:hover {
+    color: yellow !important;
+}
+
+.home-page {
+    display: flex;
+    justify-content: center;
+    /* center horizontally */
+    align-items: center;
+    /* center vertically */
+    min-height: 80vh;
+    /* take full screen height */
+}
+
+.home-content {
+    width: 50%;
+    color: azure;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 10px;
+    margin: 20px;
+    padding: 2rem;
+    text-align: center;
+}
+
+#rfidInput {
+    display: block;
+    margin: 20px auto;
+    /* auto centers horizontally */
+    padding: 10px;
+    font-size: 24px;
+    width: 500px;
+    /* adjust as needed */
+    text-align: center;
+}
+
+#message {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+#note {
+    font-size: 16px;
+    font-weight: bold;
+}

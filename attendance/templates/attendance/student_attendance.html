@@ -1,26 +1,40 @@
 {% extends 'attendance/main.html' %}
 
+{% load static %}
+
+{% block body_class %}home-bg{% endblock %}
+
 {% block content %}
 
-<div>
-    {% if event %}
-    <h2>Event: {{ event.name }} ({{ event.date }})</h2>
+<div class="home-page">
+    <div class="home-content">
 
-    {% if session %}
-    {% if session_status == "active" %}
-    <p>Session: {{ session.session_name }} (Active now: {{ session.start_time }} - {{ session.end_time }})</p>
-    {% elif session_status == "upcoming" %}
-    <p>Upcoming session: {{ session.name }} (Starts at {{ session.start_time }})</p>
-    {% endif %}
-    {% else %}
-    <p>No more sessions today.</p>
-    {% endif %}
-    {% else %}
-    <p>No events scheduled today.</p>
-    {% endif %}
+        {% if event %}
+        <h1>{{ event.name }} ({{ event.start_datetime.date }})</h1>
+        {% if session %}
+        {% if session_status == "active" %}
+        <h3>{{ session.session_name }}</h3>
+        <h4>
+            Attendance: {{ session.start_time }} - {{ session.end_time|time:"g:i a" }} |
+            Cut-off: {{ session.grace_end_time }}
+        </h4>
+        {% elif session_status == "upcoming" %}
+        <h3>Upcoming session: {{ session.name }}</h3>
+        <h4>(Starts at {{ session.start_time }})</h4>
+        {% endif %}
+        {% else %}
+        <h3>No more sessions today.</h3>
+        {% endif %}
+        {% else %}
+        <h1>No events scheduled today.</h1>
+        <h3>No sessions available for this event.</h3>
+        {% endif %}
 
-    <input type="text" id="rfidInput" placeholder="Scan RFID" autofocus>
-    <p id="message"></p>
+        <input type="text" id="rfidInput" placeholder="Scan RFID" autofocus>
+        <p id="message">Scan your RFID to mark attendance.</p>
+        <p id="note">-----</p>
+
+    </div>
 </div>
 
 <script>
@@ -39,7 +53,9 @@
                 .then(response => response.json())
                 .then(data => {
                     let msgBox = document.getElementById("message");
+                    let noteBox = document.getElementById("note");
                     msgBox.innerText = data.message;
+                    noteBox.innerText = data.note;
                     msgBox.style.color = data.success ? "green" : "red";
                     this.value = ""; // clear input after scan
                 });

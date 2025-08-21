@@ -15,7 +15,7 @@ class SessionInline(admin.TabularInline):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ("name", "date")
+    list_display = ("name", "start_datetime", "end_datetime", "penalty_amount")
     inlines = [SessionInline]
 
 
