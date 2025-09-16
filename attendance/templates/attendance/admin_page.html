@@ -1,11 +1,45 @@
 {% extends 'attendance/main.html' %}
 
+{% load static %}
+
+{% block body_class %}admin-page{% endblock %}
+
 {% block content %}
 
-<h1>Admin Page</h1>
-<hr>
+<div class="admin-page-content">
 
-<p>contents here</p>
+    <h1>Admin Page</h1>
+    <hr>
+
+    <div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>RFID</th>
+                    <th>Last Name</th>
+                    <th>First Name</th>
+                    <th>Course</th>
+                    <th>Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr>
+                    <td>{{student.id}}</td>
+                    <td>{{student.rfid}}</td>
+                    <td>{{student.last_name}}</td>
+                    <td>{{student.first_name}}</td>
+                    <td>{{student.course}}</td>
+                    <td>{{student.year}}</td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
 
 
 {% endblock %}

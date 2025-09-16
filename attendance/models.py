@@ -1,10 +1,13 @@
 from django.db import models
 from datetime import timedelta, datetime, time
 from django.utils import timezone
-import datetime
+# import datetime
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from decimal import Decimal, ROUND_HALF_UP
+from zoneinfo import ZoneInfo  # built-in from Python 3.9+
+
+MANILA_TZ = ZoneInfo("Asia/Manila")
 
 class Student(models.Model):
     BSCS = "BSCS"
@@ -17,10 +20,10 @@ class Student(models.Model):
         (BLIS, "BLIS"),
     ]
     
-    rfid = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    rfid = models.IntegerField(unique=True, blank=True, null=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
-    course = models.CharField(max_length=100, choices=COURSE_CHOICES)
+    course = models.CharField(max_length=10, choices=COURSE_CHOICES)
     year = models.IntegerField()
 
     def __str__(self):
@@ -29,15 +32,23 @@ class Student(models.Model):
 
 class Event(models.Model):
     name = models.CharField(max_length=200)
-    start_datetime = models.DateTimeField(default=timezone.now)  # start date and time
-    end_datetime = models.DateTimeField(default=timezone.now)
+    start_datetime = models.DateTimeField()
+    end_datetime = models.DateTimeField()
     penalty_amount = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     flat_rate = models.DecimalField(max_digits=6, decimal_places=2, default=30.00)  
     per_minute_penalty = models.DecimalField(max_digits=6, decimal_places=2, default=0.50)
 
     def __str__(self):
+        # Stored in Manila time already
         return f"{self.name} ({self.start_datetime.strftime('%Y-%m-%d %H:%M')})"
 
+    @property
+    def start_local(self):
+        return self.start_datetime
+
+    @property
+    def end_local(self):
+        return self.end_datetime
 
 class Session(models.Model):
     LOGIN = "LOGIN"
@@ -55,27 +66,22 @@ class Session(models.Model):
     start_time = models.TimeField()
     end_time = models.TimeField()
     grace_period = models.IntegerField(default=30)  # in minutes
+    is_closed = models.BooleanField(default=False)
 
     def get_start_datetime(self):
-        return timezone.make_aware(
-            datetime.datetime.combine(self.event.start_datetime.date(), self.start_time)
-    )
+        """Return Manila datetime for session start"""
+        event_date = self.event.start_datetime.date()
+        return datetime.combine(event_date, self.start_time)
 
     def get_end_datetime(self):
-        return timezone.make_aware(
-            datetime.datetime.combine(self.event.start_datetime.date(), self.end_time)
-        )
-    
+        """Return Manila datetime for session end"""
+        event_date = self.event.start_datetime.date()
+        return datetime.combine(event_date, self.end_time)
+
     @property
-    def grace_end_time(self):
-        # Combine event date and session end_time
-        end_dt = datetime.datetime.combine(self.event.start_datetime.date(), self.end_time)
-        # Add grace period
-        end_dt += timedelta(minutes=self.grace_period)
-        # Make timezone-aware (optional, if you need)
-        end_dt = timezone.make_aware(end_dt)
-        # Return just the time portion
-        return end_dt.time()
+    def grace_end_datetime(self):
+        """Return session end + grace period"""
+        return self.get_end_datetime() + timedelta(minutes=self.grace_period)
 
     def __str__(self):
         return f"{self.event.name} - {self.session_name} ({self.start_time} - {self.end_time})"

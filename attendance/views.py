@@ -14,9 +14,9 @@ from .forms import *
 
 # Create your views here.
 def home(request):
-    now = timezone.localtime()
+    now = datetime.now()  # always Manila time now
 
-    # Get all events today (or could filter for future events if desired)
+    # Get today's events
     events_today = Event.objects.filter(
         start_datetime__date=now.date()
     ).order_by("start_datetime")
@@ -26,12 +26,9 @@ def home(request):
     session_status = None
 
     for ev in events_today:
-        sessions = Session.objects.filter(event=ev).order_by("start_time")
-        for s in sessions:
-            # Convert session start/end into timezone-aware datetimes
-            start_dt = timezone.make_aware(datetime.datetime.combine(ev.start_datetime.date(), s.start_time))
-            end_dt = timezone.make_aware(datetime.datetime.combine(ev.start_datetime.date(), s.end_time))
-            grace_end = end_dt + timedelta(minutes=s.grace_period)
+        for s in ev.sessions.order_by("start_time"):
+            start_dt = s.get_start_datetime()
+            grace_end = s.grace_end_datetime
 
             if start_dt <= now <= grace_end:
                 # Found active session
@@ -43,24 +40,22 @@ def home(request):
             break
 
     if not session and events_today.exists():
-        # No active session found, get the next upcoming session
+        # No active session, find the next upcoming one
         for ev in events_today:
-            upcoming_sessions = Session.objects.filter(
-                event=ev,
+            upcoming_sessions = ev.sessions.filter(
                 start_time__gt=now.time()
             ).order_by("start_time")
+
             if upcoming_sessions.exists():
                 event = ev
                 session = upcoming_sessions.first()
                 session_status = "upcoming"
                 break
 
-    # print("Now date:", now.date())
-    # print("Now time:", now.time())
-    # print("Event today:", event)
-    # print("Session found:", session, "| Status:", session_status)
-    # print("Events today:", Event.objects.filter(start_datetime=now.date()))
-    # print("Sessions for event:", Session.objects.filter(event=event))
+    print("Now:", now)
+    print("Events today:", events_today)
+    print("Event found:", event)
+    print("Session found:", session, "| Status:", session_status)
 
     context = {
         "event": event,
@@ -70,7 +65,6 @@ def home(request):
 
     return render(request, "attendance/student_attendance.html", context)
 
-
 @csrf_exempt
 def markAttendance(request):
     if request.method == "POST":
@@ -79,7 +73,7 @@ def markAttendance(request):
 
         try:
             student = Student.objects.get(rfid=rfid)
-            now = timezone.localtime(timezone.now())
+            now = datetime.now()  # naive Manila datetime
 
             # Find event that is currently active or started earlier today
             event = Event.objects.filter(
@@ -100,17 +94,11 @@ def markAttendance(request):
                     "note": f"-----"
                 })
 
-            # Apply grace period
-            session_start = timezone.make_aware(
-                timezone.datetime.combine(event.start_datetime, session.start_time),
-                timezone.get_current_timezone()
-            )
-            session_end = timezone.make_aware(
-                timezone.datetime.combine(event.start_datetime, session.end_time),
-                timezone.get_current_timezone()
-            )
+            # Naive datetime for session start/end
+            session_start = datetime.combine(event.start_datetime.date(), session.start_time)
+            session_end = datetime.combine(event.start_datetime.date(), session.end_time)
 
-            # Add grace period to end time
+            # Add grace period
             session_end_with_grace = session_end + timedelta(minutes=session.grace_period)
 
             if not (session_start <= now <= session_end_with_grace):
@@ -123,15 +111,12 @@ def markAttendance(request):
             # Prevent duplicate attendance
             existing = Attendance.objects.filter(student=student, session=session).first()
             if existing:
-                # Get penalty safely
                 try:
                     penalty_amount = existing.penalty.amount
                 except ObjectDoesNotExist:
                     penalty_amount = Decimal("0.00")
                 
                 penalty_display = penalty_amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
-                
-                # Get status
                 attendance_status = existing.status
 
                 return JsonResponse({
@@ -140,15 +125,13 @@ def markAttendance(request):
                     "note": f"Status: {attendance_status} | Penalty: ₱{penalty_display}"
                 })
             
-            # Save attendance with status (Present or Late)
+            # Save attendance with status
             status = "Present"
             if now > session_end:
                 status = "Late"
 
-            # Save attendance (signal will auto-create penalty)
             attendance = Attendance.objects.create(student=student, session=session, status=status)
 
-            # Safely fetch penalty
             try:
                 penalty_amount = attendance.penalty.amount
             except ObjectDoesNotExist:
@@ -170,7 +153,12 @@ def markAttendance(request):
             })
 
 def adminPage(request):
-    return render(request, 'attendance/admin_page.html')
+    student = Student.objects.all()
+    # event = Event.objects.all()
+
+    context = {'students': student}
+
+    return render(request, 'attendance/admin_page.html', context)
 
 
 

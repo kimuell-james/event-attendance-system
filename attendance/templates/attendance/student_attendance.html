@@ -15,8 +15,8 @@
         {% if session_status == "active" %}
         <h3>{{ session.session_name }}</h3>
         <h4>
-            Attendance: {{ session.start_time }} - {{ session.end_time|time:"g:i a" }} |
-            Cut-off: {{ session.grace_end_time }}
+            Attendance: {{ session.start_time }} - {{ session.end_time }} |
+            Cut-off: {{ session.grace_end_datetime.time }}
         </h4>
         {% elif session_status == "upcoming" %}
         <h3>Upcoming session: {{ session.name }}</h3>

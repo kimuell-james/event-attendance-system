@@ -6,12 +6,16 @@ body.home-bg {
     color: azure !important;
 }
 
-/* Style the whole navbar */
+.admin-page-content {
+    padding: 20px;
+}
+
+/* Navbar Style */
+
 .navbar {
     background: rgba(0, 0, 0, 0.7);
 }
 
-/* Make navbar links visible */
 .navbar a {
     color: rgb(240, 255, 255) !important;
     text-decoration: none;
@@ -20,18 +24,13 @@ body.home-bg {
 .navbar-brand {
     display: flex;
     align-items: center;
-    /* vertically center items */
     gap: 10px;
-    /* spacing between items */
 }
 
 .navbar-title {
     margin: 0;
-    /* remove default margin from h2 */
     font-size: 1.5rem;
-    /* adjust size */
     color: rgb(240, 255, 255);
-    /* keep text color */
 }
 
 .navbar-link {
@@ -42,14 +41,13 @@ body.home-bg {
     color: yellow !important;
 }
 
+/* Home Page Style */
+
 .home-page {
     display: flex;
     justify-content: center;
-    /* center horizontally */
     align-items: center;
-    /* center vertically */
     min-height: 80vh;
-    /* take full screen height */
 }
 
 .home-content {
@@ -82,3 +80,5 @@ body.home-bg {
     font-size: 16px;
     font-weight: bold;
 }
+
+/* Admin Page Style */
